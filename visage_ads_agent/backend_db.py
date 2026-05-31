@@ -46,7 +46,14 @@ def _conn(cfg: Config) -> Iterator[psycopg2.extensions.connection]:
         raise RuntimeError("BACKEND_DATABASE_URL is not set")
     c = psycopg2.connect(cfg.backend_database_url, connect_timeout=15)
     try:
-        c.set_session(readonly=True, autocommit=True)
+        # NOTE: do NOT use set_session(readonly=True). Neon's pooler is in
+        # transaction-pooling mode and a session-level READ ONLY flag leaks
+        # across pooled connections (we hit this: a later CREATE SCHEMA on a
+        # *different* connection that happened to reuse the same server-side
+        # session failed with `cannot execute CREATE SCHEMA in a read-only
+        # transaction`). The actual read-only guarantee is enforced by the
+        # SQL in this module — only SELECTs.
+        c.autocommit = True
         yield c
     finally:
         c.close()
