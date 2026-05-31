@@ -63,11 +63,11 @@ class ASAClient:
     def _sign_client_secret(self) -> str:
         now = int(time.time())
         payload = {
-            "sub": self.cfg.asa_key_id,
+            "sub": self.cfg.asa_client_id,
             "aud": ASA_AUDIENCE,
             "iat": now,
             "exp": now + DEFAULT_JWT_LIFETIME_S,
-            "iss": self.cfg.asa_issuer_id,
+            "iss": self.cfg.asa_team_id,
         }
         headers = {"alg": "ES256", "kid": self.cfg.asa_key_id}
         return jwt.encode(
@@ -81,7 +81,7 @@ class ASAClient:
         client_secret = self._sign_client_secret()
         data = {
             "grant_type": "client_credentials",
-            "client_id": self.cfg.asa_key_id,
+            "client_id": self.cfg.asa_client_id,
             "client_secret": client_secret,
             "scope": ASA_SCOPE,
         }

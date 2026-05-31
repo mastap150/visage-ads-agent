@@ -33,9 +33,13 @@ def _int(name: str, default: int) -> int:
 
 @dataclass(frozen=True)
 class Config:
-    # ASA auth
+    # ASA auth (modern self-managed-cert OAuth flow)
+    #   client_id: 'SEARCHADS.<uuid>' — JWT `sub` AND form `client_id`
+    #   team_id:   'SEARCHADS.<uuid>' — JWT `iss` (often == client_id for self-managed)
+    #   key_id:    plain uuid — JWT header `kid`
+    asa_client_id: str
+    asa_team_id: str
     asa_key_id: str
-    asa_issuer_id: str
     asa_private_key_pem: str
     asa_org_id: str
     asa_time_zone: str
@@ -73,8 +77,9 @@ class Config:
         pem = pem.replace("\\n", "\n")
 
         return cls(
+            asa_client_id=_req("ASA_CLIENT_ID"),
+            asa_team_id=_opt("ASA_TEAM_ID") or _req("ASA_CLIENT_ID"),
             asa_key_id=_req("ASA_KEY_ID"),
-            asa_issuer_id=_req("ASA_ISSUER_ID"),
             asa_private_key_pem=pem,
             asa_org_id=_opt("ASA_ORG_ID"),
             asa_time_zone=_opt("ASA_TIME_ZONE", "UTC"),

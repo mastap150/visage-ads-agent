@@ -18,16 +18,18 @@ services:
     envVars:
       - key: PYTHON_VERSION
         value: "3.12"
+      - key: ASA_CLIENT_ID
+        sync: false
+      - key: ASA_TEAM_ID
+        sync: false
       - key: ASA_KEY_ID
         sync: false
-      - key: ASA_ISSUER_ID
-        sync: false
-      - key: ASA_PRIVATE_KEY_PEM   # paste the .p8 contents (newlines as \n)
+      - key: ASA_PRIVATE_KEY_PEM   # paste asa_private_key.pem contents
         sync: false
       - key: ASA_ORG_ID
-        sync: false
+        value: "22103240"
       - key: ASA_TIME_ZONE
-        value: UTC
+        value: America/New_York
       - key: BACKEND_DATABASE_URL
         sync: false
       - key: AGENT_DATABASE_URL
