@@ -1,0 +1,48 @@
+# Render Blueprint for the Visage ASA optimization agent.
+#
+# Phase 1 ships as a single daily cron-job:
+#   - 09:00 UTC = 02:00 US-Pacific = captures the prior full PT day after
+#     Apple's ~2-3h reporting lag.
+#
+# Phases 2 + 3 will add additional cron jobs once their modules are
+# implemented (see recommend.py and agent.py for the planned schedule).
+
+services:
+  - type: cron
+    name: visage-ads-report
+    runtime: python
+    plan: free
+    schedule: "0 9 * * *"
+    buildCommand: pip install -r requirements.txt
+    startCommand: python -m visage_ads_agent.report
+    envVars:
+      - key: PYTHON_VERSION
+        value: "3.12"
+      - key: ASA_KEY_ID
+        sync: false
+      - key: ASA_ISSUER_ID
+        sync: false
+      - key: ASA_PRIVATE_KEY_PEM   # paste the .p8 contents (newlines as \n)
+        sync: false
+      - key: ASA_ORG_ID
+        sync: false
+      - key: ASA_TIME_ZONE
+        value: UTC
+      - key: BACKEND_DATABASE_URL
+        sync: false
+      - key: AGENT_DATABASE_URL
+        sync: false
+      - key: AGENT_DB_SCHEMA
+        value: ads_agent
+      - key: SLACK_WEBHOOK_URL
+        sync: false
+      - key: REPORT_LOOKBACK_HOURS
+        value: "24"
+      - key: MIN_DATA_AGE_HOURS
+        value: "48"
+      - key: TARGET_CPA_PAID_USD
+        value: "15.00"
+      - key: HARD_CAP_CPT_USD
+        value: "5.00"
+      - key: MAX_DAILY_BUDGET_INCREASE_PCT
+        value: "25"
