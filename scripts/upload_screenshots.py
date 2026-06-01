@@ -10,6 +10,16 @@ What it does
     1. Mints an App Store Connect JWT (ES256, aud=appstoreconnect-v1) with the
        AuthKey_<KEY_ID>.p8 file. NOTE: this is DIFFERENT from the Apple Search
        Ads OAuth key — ASC uses the legacy `.p8` flow and a 20-minute JWT.
+
+KNOWN GOTCHAS
+    - Apple has NO `APP_IPHONE_69` enum despite iPhone 6.9" being a real
+      display class. 1290x2796 screenshots are filed under `APP_IPHONE_67`
+      (the iPhone 6.7" set is what the 6.9" Pro Max also reads from).
+    - Once a version is in WAITING_FOR_REVIEW / IN_REVIEW, Apple LOCKS the
+      screenshot set: you can't delete, replace, or reorder. The script
+      will fail with `STATE_ERROR: Can't Delete Screenshot After Submit
+      for review`. Wait for the review to resolve (approve or reject),
+      then re-run.
     2. Locates the Visage app by bundle ID, then its in-progress App Store
        version (whatever state Apple has it in — works while WAITING_FOR_REVIEW
        and after READY_FOR_SALE).
@@ -358,8 +368,10 @@ def main() -> None:
     logging.basicConfig(level=logging.INFO, format="%(asctime)s %(levelname)s %(name)s %(message)s")
     p = argparse.ArgumentParser(description=__doc__)
     p.add_argument("--dir", required=True, help="Directory containing PNGs (sorted lexically)")
-    p.add_argument("--display-type", default="APP_IPHONE_69",
-                   help="Apple's ScreenshotDisplayType (default APP_IPHONE_69 = iPhone 6.9\")")
+    p.add_argument("--display-type", default="APP_IPHONE_67",
+                   help="Apple's ScreenshotDisplayType. Default APP_IPHONE_67 — Apple files "
+                        "both iPhone 6.7\" and 6.9\" displays (same 1290x2796 resolution) "
+                        "under this enum; there is no APP_IPHONE_69.")
     p.add_argument("--locale", default=DEFAULT_LOCALE)
     p.add_argument("--bundle-id", default=os.environ.get("ASC_BUNDLE_ID", DEFAULT_BUNDLE_ID))
     p.add_argument("--clear-existing", action="store_true",
