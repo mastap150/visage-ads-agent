@@ -149,6 +149,18 @@ class ASAClient:
 
     # ----- public surface --------------------------------------------------
 
+    async def request_json(
+        self,
+        method: str,
+        path: str,
+        *,
+        body: dict | None = None,
+        params: dict | None = None,
+        with_org: bool = True,
+    ) -> Any:
+        """Generic JSON request with retry/backoff + auth. Used by scripts/."""
+        return await self._request(method, path, json_body=body, params=params, with_org=with_org)
+
     async def list_orgs(self) -> list[dict[str, Any]]:
         """GET /api/v5/acls — returns the orgs this API user can see."""
         body = await self._request("GET", "/acls", with_org=False)

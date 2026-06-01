@@ -79,6 +79,9 @@ visage-ads-agent/
 │   ├── report.py           # Phase 1 entrypoint (`make report`)
 │   ├── recommend.py        # Phase 2 stub (`make recommend`)
 │   └── agent.py            # Phase 3 stub (`make execute`)
+├── scripts/
+│   ├── upload_screenshots.py    # ASC API uploader (`make upload-screenshots`)
+│   └── bootstrap_campaigns.py   # creates 3 ASA campaigns (`make bootstrap-campaigns`)
 ├── sql/
 │   └── backend_migration_suggestion.sql   # adds users.acquisition_source
 ├── render.yaml             # Render Blueprint for the daily cron
@@ -87,6 +90,63 @@ visage-ads-agent/
 ├── .env.example
 └── README.md
 ```
+
+## Launch-day tooling (one-shots)
+
+After Apple flips the app to "Ready for Sale" (or right now for screenshots —
+App Store metadata is editable while WAITING_FOR_REVIEW), two one-command
+operations bootstrap everything:
+
+### Upload App Store screenshots — `make upload-screenshots`
+
+Uploads the 5 PNGs from `~/Desktop/visage/app-store-screenshots/iphone-6.9-final/`
+to App Store Connect via the ASC API. Idempotent with `--clear-existing` (the
+default in the Makefile target) — wipes the iPhone 6.9" screenshot set, then
+uploads the 5 new ones in lexical order. Metadata-only update; no binary
+rebuild needed.
+
+Verified ASC auth against the live API (app lookup + version lookup) on
+2026-05-31; no further setup required if `ASC_KEY_ID` / `ASC_ISSUER_ID` /
+`ASC_PRIVATE_KEY_PATH` are set in `.env`.
+
+To target iPad later:
+
+```bash
+python -m scripts.upload_screenshots \
+  --dir ~/Desktop/visage/app-store-screenshots/ipad-13-final \
+  --display-type APP_IPAD_PRO_129 \
+  --clear-existing
+```
+
+(Or use `APP_IPAD_PRO_3GEN_129` / `APP_IPAD_PRO_3GEN_11` depending on
+the source set's resolution.)
+
+### Bootstrap ASA campaigns — `make bootstrap-campaigns`
+
+Creates the 3 campaigns from
+[`~/Desktop/visage/APPLE_SEARCH_ADS.md`](../APPLE_SEARCH_ADS.md) — Brand
+Defense / Category Discovery / Competitors — with every ad group, keyword,
+bid, daily budget, and the 11 campaign-level negative keywords. Everything
+created in **PAUSED** state. Output IDs land in `scripts/campaigns.json`
+for Phase 2 to reference.
+
+Always preview first:
+
+```bash
+make bootstrap-campaigns-dry      # prints the plan, no API calls
+make bootstrap-campaigns          # actually creates
+```
+
+If the run fails partway, re-run with `--resume` to skip already-existing
+campaigns:
+
+```bash
+python -m scripts.bootstrap_campaigns --resume
+```
+
+Caveat: Apple may reject campaign creation with `INVALID_ADAM_ID` (or
+similar) until the app is "Ready for Sale." In that case, wait for
+approval and re-run.
 
 ---
 

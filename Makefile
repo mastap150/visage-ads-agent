@@ -1,4 +1,4 @@
-.PHONY: install report recommend execute migrate auth-check shell clean
+.PHONY: install report recommend execute migrate auth-check shell clean upload-screenshots bootstrap-campaigns bootstrap-campaigns-dry
 
 PYTHON ?= python3
 
@@ -32,3 +32,22 @@ shell:
 clean:
 	find . -name __pycache__ -type d -exec rm -rf {} +
 	rm -rf .pytest_cache .coverage htmlcov build dist *.egg-info
+
+# -----------------------------------------------------------------------------
+# One-shot launch tooling (run after Apple approves the app, OR for screenshots
+# even before approval — App Store metadata is editable in WAITING_FOR_REVIEW).
+# -----------------------------------------------------------------------------
+
+# Upload the 5 marketing-overlay screenshots in iphone-6.9-final/ to ASC.
+# Requires ASC_KEY_ID / ASC_ISSUER_ID / ASC_PRIVATE_KEY_PATH in .env (or env).
+SCREENSHOTS_DIR ?= ~/Desktop/visage/app-store-screenshots/iphone-6.9-final
+upload-screenshots:
+	$(PYTHON) -m scripts.upload_screenshots --dir $(SCREENSHOTS_DIR) --clear-existing
+
+# Create the 3 ASA campaigns from APPLE_SEARCH_ADS.md in PAUSED state.
+# Run --dry first to eyeball the plan, then drop the suffix to actually create.
+bootstrap-campaigns-dry:
+	$(PYTHON) -m scripts.bootstrap_campaigns --dry-run
+
+bootstrap-campaigns:
+	$(PYTHON) -m scripts.bootstrap_campaigns
